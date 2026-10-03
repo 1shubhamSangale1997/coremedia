@@ -1,0 +1,117 @@
+
+<style>
+.tp-wrap { padding: 1rem 0; font-size: 14px; }
+.tp-section { margin-bottom: 1.5rem; }
+.tp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tp-badge { font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+.badge-unit    { background: var(--color-background-info);    color: var(--color-text-info); }
+.badge-widget  { background: var(--color-background-success); color: var(--color-text-success); }
+.badge-int     { background: var(--color-background-warning); color: var(--color-text-warning); }
+.badge-manual  { background: var(--color-background-danger);  color: var(--color-text-danger); }
+.tp-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.tp-cases { display: flex; flex-direction: column; gap: 6px; }
+.tp-case { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); cursor: pointer; border: 1px solid transparent; transition: border-color .15s; }
+.tp-case:hover { border-color: var(--color-border-secondary); }
+.tp-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--color-border-primary); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.tp-case.done .tp-check { background: var(--color-background-success); border-color: var(--color-text-success); }
+.tp-case.done .tp-check::after { content: '✓'; font-size: 10px; color: var(--color-text-success); font-weight: 700; }
+.tp-case.done .tp-label { text-decoration: line-through; color: var(--color-text-tertiary); }
+.tp-label { color: var(--color-text-secondary); line-height: 1.5; }
+.tp-label strong { color: var(--color-text-primary); font-weight: 500; }
+.tp-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding: 12px 16px; border-radius: var(--border-radius-lg); background: var(--color-background-secondary); }
+.tp-bar-wrap { flex: 1; height: 6px; background: var(--color-border-tertiary); border-radius: 3px; overflow: hidden; }
+.tp-bar { height: 100%; background: var(--color-text-success); border-radius: 3px; transition: width .3s; }
+.tp-pct { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+.tp-pct strong { color: var(--color-text-primary); }
+</style>
+<div class="tp-wrap">
+  <div class="tp-progress">
+    <span style="font-size:13px;color:var(--color-text-secondary)">Progress</span>
+    <div class="tp-bar-wrap"><div class="tp-bar" id="prog-bar" style="width:0%"></div></div>
+    <span class="tp-pct" id="prog-label"><strong>0</strong> / <span id="prog-total">0</span> passed</span>
+  </div>
+
+  <!-- 1. Unit tests -->
+  <div class="tp-section">
+    <div class="tp-header">
+      <span class="tp-badge badge-unit">Unit test</span>
+      <span class="tp-title">Model & service logic</span>
+    </div>
+    <div class="tp-cases">
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>AttendeeData.fromJson</strong> — valid JSON parses name, email, passCode correctly</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>AttendeeData.fromJson</strong> — missing fields default to "—" not null crash</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>isAlreadyCheckedIn</strong> — returns true only when status == "CHECKED_IN"</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>ApiResult.success</strong> — resultType defaults to freshCheckIn</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>ApiResult.failure</strong> — success flag is false, message is set</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>TokenManager._jwtExpiry</strong> — parses a real JWT and returns correct DateTime</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>TokenManager._jwtExpiry</strong> — returns null for malformed token</div></div>
+    </div>
+  </div>
+
+  <!-- 2. Widget tests -->
+  <div class="tp-section">
+    <div class="tp-header">
+      <span class="tp-badge badge-widget">Widget test</span>
+      <span class="tp-title">UI rendering</span>
+    </div>
+    <div class="tp-cases">
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>HomeScreen</strong> — "Mark Attendance" button is visible</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>HomeScreen</strong> — tapping button navigates to QRScannerScreen</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>DetailsScreen</strong> — attendee name rendered in red heading</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>DetailsScreen</strong> — "Tap to Present" button enabled on first load</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>DetailsScreen</strong> — button disabled after successful check-in</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>AlreadyCheckedInScreen</strong> — green banner shows "Already Checked In"</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>AlreadyCheckedInScreen</strong> — "Back to Home" pops to root</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>ThankYouDialog</strong> — "Ok Got It" button calls onDismiss</div></div>
+    </div>
+  </div>
+
+  <!-- 3. Integration / API -->
+  <div class="tp-section">
+    <div class="tp-header">
+      <span class="tp-badge badge-int">Integration</span>
+      <span class="tp-title">API & QR flow</span>
+    </div>
+    <div class="tp-cases">
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Valid QR scan</strong> — fetchAttendeeByPassCode returns attendee, navigates to DetailsScreen</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Invalid QR scan</strong> — unknown passCode shows "Attendee not found" snackbar</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Fresh check-in (200)</strong> — checkIn() returns success, ThankYouDialog appears</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Already checked in (400)</strong> — navigates to AlreadyCheckedInScreen with attendee data</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Token expiry (401)</strong> — token is invalidated, error snackbar shown</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>No network</strong> — "Network error" message shown, scanner resets</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>QR with JSON payload</strong> — passCode extracted from {"passCode":"ABC123"}</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>QR with plain string</strong> — raw value used directly as passCode</div></div>
+    </div>
+  </div>
+
+  <!-- 4. Manual / device -->
+  <div class="tp-section">
+    <div class="tp-header">
+      <span class="tp-badge badge-manual">Manual</span>
+      <span class="tp-title">Device & camera</span>
+    </div>
+    <div class="tp-cases">
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Camera permission</strong> — first launch shows permission dialog on Android</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Permission denied</strong> — graceful message, scanner does not crash</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Flashlight toggle</strong> — torch turns on/off correctly</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Double scan</strong> — scanning same QR twice does not trigger duplicate API call</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Back navigation</strong> — back from scanner resets _scanned flag and restarts camera</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Release APK</strong> — camera opens on physical Android device (not just debug)</div></div>
+      <div class="tp-case" onclick="toggle(this)"><div class="tp-check"></div><div class="tp-label"><strong>Low light</strong> — scanner still detects QR code in dim conditions</div></div>
+    </div>
+  </div>
+</div>
+<script>
+function toggle(el) {
+  el.classList.toggle('done');
+  updateProgress();
+}
+function updateProgress() {
+  const all = document.querySelectorAll('.tp-case');
+  const done = document.querySelectorAll('.tp-case.done');
+  const pct = all.length ? Math.round(done.length / all.length * 100) : 0;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-label').innerHTML = '<strong>' + done.length + '</strong> / <span id="prog-total">' + all.length + '</span> passed';
+}
+document.getElementById('prog-total').textContent = document.querySelectorAll('.tp-case').length;
+</script>
