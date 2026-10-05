@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class TokenManager {
-  static const String _baseUrl = 'https://backend.uatcoremedia.vebsigns.com';
+  // static const String _baseUrl = 'https://backend.uatcoremedia.vebsigns.com';
+  static const String _baseUrl = 'https://api.core-mediagroup.com';
   static const String _loginPath = '/api/v1/admin/auth/login';
 
   static String? _cachedToken;
@@ -32,9 +33,11 @@ class TokenManager {
 
     final json = jsonDecode(response.body);
     final token =
-        (json['data'] is Map ? json['data']['access_token']?.toString() : null) ??
-            json['token']?.toString() ??
-            json['accessToken']?.toString();
+        (json['data'] is Map
+            ? json['data']['access_token']?.toString()
+            : null) ??
+        json['token']?.toString() ??
+        json['accessToken']?.toString();
 
     if (token == null) throw Exception('No token in response');
 
@@ -49,7 +52,8 @@ class TokenManager {
     if (_cachedToken != null &&
         _expiresAt != null &&
         DateTime.now().isBefore(
-            _expiresAt!.subtract(const Duration(seconds: 60)))) {
+          _expiresAt!.subtract(const Duration(seconds: 60)),
+        )) {
       return _cachedToken!;
     }
     throw Exception('No active session. Please log in again.');
