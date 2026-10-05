@@ -14,7 +14,7 @@ class TokenManager {
     required String email,
     required String password,
   }) async {
-    final uri = Uri.parse('$_baseUrl$_loginPath');
+    final uri = Uri.parse('$_baseUrl$_loginPath'); 
     final response = await http
         .post(
           uri,
