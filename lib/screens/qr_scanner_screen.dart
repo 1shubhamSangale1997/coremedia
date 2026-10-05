@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -60,10 +61,35 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     _cameraController.stop();
 
     String passCode = rawValue;
+    final uri = Uri.tryParse(rawValue);
+
+    if (uri != null && uri.hasQuery) {
+      // Case-insensitive lookup in query parameters
+      final matchingKey = uri.queryParameters.keys.firstWhere(
+        (key) => key.toLowerCase() == 'passcode',
+        orElse: () => '',
+      );
+
+      if (matchingKey.isNotEmpty) {
+        passCode = uri.queryParameters[matchingKey]!;
+      }
+    }
+
+    // Fallback check if 'passCode=' or 'passcode=' exists (e.g., inside URL fragment after '#')
+    if (passCode == rawValue && rawValue.toLowerCase().contains('passcode=')) {
+      final regExp = RegExp(r'[?&]passcode=([^&]+)', caseSensitive: false);
+      final match = regExp.firstMatch(rawValue);
+      if (match != null && match.group(1) != null) {
+        passCode = match.group(1)!;
+      }
+    }
+
+    log("passCode");
     try {
       final decoded = jsonDecode(rawValue);
       if (decoded is Map) {
-        passCode = decoded['passCode']?.toString() ??
+        passCode =
+            decoded['passCode']?.toString() ??
             decoded['passcode']?.toString() ??
             decoded['pass_code']?.toString() ??
             decoded['code']?.toString() ??
@@ -71,8 +97,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       }
     } catch (_) {}
 
-    final attendee =
-        await AttendanceApiService.fetchAttendeeByPassCode(passCode);
+    final attendee = await AttendanceApiService.fetchAttendeeByPassCode(
+      passCode,
+    );
 
     if (!mounted) return;
     setState(() => _loading = false);
@@ -92,13 +119,13 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (_) => DetailsScreen(attendee: attendee)),
+          MaterialPageRoute(builder: (_) => DetailsScreen(attendee: attendee)),
         );
       }
     } else {
       _showScanError(
-          'Attendee not found. Please check the QR code and try again.');
+        'Attendee not found. Please check the QR code and try again.',
+      );
       setState(() => _scanned = false);
       _cameraController.start();
     }
@@ -113,15 +140,16 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             const Icon(Icons.error_outline, color: Colors.white, size: 18),
             const SizedBox(width: 10),
             Expanded(
-                child: Text(message,
-                    style: const TextStyle(
-                        fontSize: 13, color: Colors.white))),
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 13, color: Colors.white),
+              ),
+            ),
           ],
         ),
         backgroundColor: const Color(0xFFB5173A),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 4),
       ),
@@ -144,16 +172,21 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Scan QR Code',
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 18)),
+        title: const Text(
+          'Scan QR Code',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(_flashOn ? Icons.flash_on : Icons.flash_off,
-                color: Colors.white),
+            icon: Icon(
+              _flashOn ? Icons.flash_on : Icons.flash_off,
+              color: Colors.white,
+            ),
             onPressed: _toggleFlash,
           ),
         ],
@@ -184,8 +217,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                       width: 260,
                       height: 260,
                       decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.white24, width: 1),
+                        border: Border.all(color: Colors.white24, width: 1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
@@ -220,9 +252,10 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                 'Align the QR code within the\nframe to record attendance.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
-                    height: 1.6),
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 14,
+                  height: 1.6,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -232,14 +265,18 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                     width: 14,
                     height: 14,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white.withOpacity(0.6)),
+                      strokeWidth: 2,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Text('Scanning…',
-                      style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                          fontSize: 13)),
+                  Text(
+                    'Scanning…',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
               const Spacer(),
@@ -248,7 +285,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 48),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 12),
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white12,
                     borderRadius: BorderRadius.circular(30),
@@ -258,15 +297,15 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                          _flashOn
-                              ? Icons.flash_on
-                              : Icons.flashlight_on,
-                          color: Colors.white,
-                          size: 18),
+                        _flashOn ? Icons.flash_on : Icons.flashlight_on,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
-                      const Text('Flashlight',
-                          style: TextStyle(
-                              color: Colors.white, fontSize: 14)),
+                      const Text(
+                        'Flashlight',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -282,11 +321,14 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                   children: [
                     CircularProgressIndicator(color: Colors.white),
                     SizedBox(height: 16),
-                    Text('Fetching attendee details…',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500)),
+                    Text(
+                      'Fetching attendee details…',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -312,7 +354,11 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           height: len,
           child: CustomPaint(
             painter: _CornerPainter(
-                top: top, left: left, color: color, thickness: thick),
+              top: top,
+              left: left,
+              color: color,
+              thickness: thick,
+            ),
           ),
         ),
       );
@@ -331,11 +377,12 @@ class _CornerPainter extends CustomPainter {
   final bool top, left;
   final Color color;
   final double thickness;
-  const _CornerPainter(
-      {required this.top,
-      required this.left,
-      required this.color,
-      required this.thickness});
+  const _CornerPainter({
+    required this.top,
+    required this.left,
+    required this.color,
+    required this.thickness,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

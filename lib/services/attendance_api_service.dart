@@ -6,7 +6,8 @@ import 'package:coremedia/models/api_result.dart';
 import 'package:coremedia/services/token_manager.dart';
 
 class AttendanceApiService {
-  static const String _baseUrl = 'https://backend.uatcoremedia.vebsigns.com';
+  // static const String _baseUrl = 'https://backend.uatcoremedia.vebsigns.com';
+  static const String _baseUrl = 'https://api.core-mediagroup.com';
 
   static Future<Map<String, String>> _headers() async {
     final token = await TokenManager.getToken();
@@ -21,7 +22,8 @@ class AttendanceApiService {
     try {
       final headers = await _headers();
       final uri = Uri.parse(
-          '$_baseUrl/api/v1/admin/attendees?page=1&limit=10&search=$passCode');
+        '$_baseUrl/api/v1/admin/attendees?page=1&limit=10&search=$passCode',
+      );
       final response = await http
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 15));
@@ -32,8 +34,9 @@ class AttendanceApiService {
         if (outerData is Map) {
           final list = outerData['data'];
           if (list is List && list.isNotEmpty) {
-            return AttendeeData.fromJson(
-                {'data': list[0] as Map<String, dynamic>});
+            return AttendeeData.fromJson({
+              'data': list[0] as Map<String, dynamic>,
+            });
           }
         }
       }
@@ -47,7 +50,8 @@ class AttendanceApiService {
     try {
       final headers = await _headers();
       final uri = Uri.parse(
-          '$_baseUrl/api/v1/admin/attendees/$passCode/check-in');
+        '$_baseUrl/api/v1/admin/attendees/$passCode/check-in',
+      );
       final response = await http
           .patch(uri, headers: headers)
           .timeout(const Duration(seconds: 15));
@@ -71,7 +75,9 @@ class AttendanceApiService {
 
       if (response.statusCode == 401) {
         TokenManager.invalidate();
-        return ApiResult.failure(message: 'Session expired. Please scan again.');
+        return ApiResult.failure(
+          message: 'Session expired. Please scan again.',
+        );
       }
 
       if (response.statusCode == 400) {
